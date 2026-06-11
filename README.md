@@ -57,6 +57,36 @@ The interactive menu will:
 
 ---
 
+## IDE & Coding Tool Integrations
+
+Once the server is running at `http://localhost:8080/v1`, connect any of these tools:
+
+| Tool | How to connect | What you get |
+|---|---|---|
+| **Continue** (VS Code) | `apiBase: http://localhost:8080/v1` in `~/.continue/config.yaml` | Inline edit (`Cmd+I`), chat panel (`Cmd+L`) |
+| **Cursor** | Settings → Models → OpenAI-compatible → `http://localhost:8080/v1` | AI editor backed by your local model |
+| **Windsurf** | Settings → AI → Custom model → `http://localhost:8080/v1` | Agentic coding assistant, local model |
+| **Open WebUI** | `docker run` with `OPENAI_API_BASE_URL=http://host.docker.internal:8080/v1` | ChatGPT-style browser UI |
+| **Any OpenAI client** | `base_url="http://localhost:8080/v1"`, `api_key="local"` | LangChain, LlamaIndex, CrewAI, AutoGen, curl |
+
+### Continue setup (VS Code)
+
+Install the [Continue extension](https://marketplace.visualstudio.com/items?itemName=Continue.continue), then edit `~/.continue/config.yaml`:
+
+```yaml
+models:
+  - name: Local MLX
+    provider: openai
+    model: <your-model-id>
+    apiBase: http://localhost:8080/v1
+    apiKey: local
+    roles: [chat, edit, apply]
+```
+
+Reload VS Code — the Continue sidebar will now use your local server.
+
+---
+
 ## Integrating with Agentic Tools
 
 Once the server is running at `http://localhost:8080/v1`, **any tool that supports the OpenAI API works immediately** — just change `base_url`.
@@ -226,36 +256,6 @@ For deeper Apple Neural Engine (ANE) and per-core (E/P cluster) breakdown:
 brew install asitop
 sudo asitop
 ```
-
----
-
-## IDE & Coding Tool Integrations
-
-Once the server is running at `http://localhost:8080/v1`, connect any of these tools:
-
-| Tool | How to connect | What you get |
-|---|---|---|
-| **Continue** (VS Code) | `apiBase: http://localhost:8080/v1` in `~/.continue/config.yaml` | Inline edit (`Cmd+I`), chat panel (`Cmd+L`) |
-| **Cursor** | Settings → Models → OpenAI-compatible → `http://localhost:8080/v1` | AI editor backed by your local model |
-| **Windsurf** | Settings → AI → Custom model → `http://localhost:8080/v1` | Agentic coding assistant, local model |
-| **Open WebUI** | `docker run` with `OPENAI_API_BASE_URL=http://host.docker.internal:8080/v1` | ChatGPT-style browser UI |
-| **Any OpenAI client** | `base_url="http://localhost:8080/v1"`, `api_key="local"` | LangChain, LlamaIndex, CrewAI, AutoGen, curl |
-
-### Continue setup (VS Code)
-
-Install the [Continue extension](https://marketplace.visualstudio.com/items?itemName=Continue.continue), then edit `~/.continue/config.yaml`:
-
-```yaml
-models:
-  - name: Local MLX
-    provider: openai
-    model: <your-model-id>
-    apiBase: http://localhost:8080/v1
-    apiKey: local
-    roles: [chat, edit, apply]
-```
-
-Reload VS Code — the Continue sidebar will now use your local server.
 
 ---
 
