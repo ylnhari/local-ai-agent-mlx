@@ -1,0 +1,18 @@
+[project]
+name = "local-ai-agent-mlx"
+version = "0.1.0"
+description = "Run a local, OpenAI-compatible LLM server on Apple Silicon using MLX"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+    "mlx-lm",
+    "rich",
+    "questionary",
+    "huggingface_hub",
+    "psutil",
+]
+
+[tool.uv]
+# Script-only project — no package installation needed
+package = false
