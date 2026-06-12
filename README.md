@@ -85,6 +85,44 @@ models:
 
 Reload VS Code — the Continue sidebar will now use your local server.
 
+### VS Code Copilot (Custom Endpoint)
+
+You can also add your local server as a model **directly in GitHub Copilot Chat** — it then appears in the chat model picker and works in agent mode (tool calling).
+
+1. Command Palette → **Chat: Manage Language Models** (or the gear icon in the chat model picker).
+2. **Add Models** → **Custom Endpoint**.
+3. Group name: `Local MLX` · API key: `local` (the server ignores it) · API type: **Chat Completions**.
+4. In the `chatLanguageModels.json` that opens, add your model:
+
+```json
+[
+  {
+    "name": "Local MLX",
+    "vendor": "customendpoint",
+    "apiKey": "local",
+    "apiType": "chat-completions",
+    "models": [
+      {
+        "id": "mlx-community/Qwen3.6-35B-A3B-OptiQ-4bit",
+        "name": "Qwen3.6 35B-A3B (local)",
+        "url": "http://localhost:8080/v1/chat/completions",
+        "toolCalling": true,
+        "maxInputTokens": 100000,
+        "maxOutputTokens": 16384
+      }
+    ]
+  }
+]
+```
+
+5. Save, then select **Qwen3.6 35B-A3B (local)** from the model picker. Restart VS Code if it doesn't appear right away.
+
+> **Notes**
+> - `id` must exactly match what `/v1/models` reports, and `toolCalling: true` is required for the model to show up and to work in agent mode.
+> - Launch the server with a matching KV budget so 100K prompts don't fail, e.g. `python -m mlx_lm server --model <id> --max-kv-size 131072`.
+> - **Corporate (Copilot Business/Enterprise):** an admin must enable the *Bring Your Own Language Model Key in VS Code* policy, otherwise the Custom Endpoint option won't appear.
+> - Local models power **chat & agent** only — not inline code completions.
+
 ---
 
 ## Integrating with Agentic Tools
