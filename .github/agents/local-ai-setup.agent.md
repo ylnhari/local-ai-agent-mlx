@@ -1,7 +1,7 @@
 ---
 description: "Use when: setting up local-ai-agent-mlx repo, cloning and installing the repo, starting the LLM server, starting the monitor, running start.py, running monitor.py, choosing which model to run on my Mac, setup local LLM, first time setup, how do I run this, get the server running, check my hardware, Apple Silicon LLM setup, uv run start.py, uv run monitor.py"
 name: "Local AI Setup"
-tools: [read, search, execute, edit]
+tools: [vscode, execute, read, agent, edit, search, web, browser, todo]
 argument-hint: "What do you want to do? (setup / start server / start monitor / find a model)"
 ---
 
@@ -107,11 +107,11 @@ If the user does not know which model to pick:
 3. Recommend the pre-converted `mlx-community` variant as first choice (fastest startup).
 4. For the **recommended starter on any machine**: `mlx-community/Llama-3.2-3B-Instruct-4bit` (~2 GB, works on 8 GB RAM).
 
-If the user has a specific base model in mind (e.g. "I want Mistral 7B" or "which Qwen version?"), **delegate to the MLX Model Finder agent**:
+If the user has a specific base model in mind (e.g. "I want Mistral 7B" or "which Qwen version?"), OR asks "what is the most powerful model I can run" / has a context-length requirement, **delegate to the MLX Model Finder agent**:
 
-> "I'll hand this off to the MLX Model Finder agent — it will search mlx-community, bartowski, unsloth, and lmstudio-community on Hugging Face and return the best quantization for your RAM."
+> "I'll hand this off to the MLX Model Finder agent — it will detect your chip and RAM, budget weights + KV cache for your context length, search mlx-community / unsloth / lmstudio-community / bartowski, and return the single most powerful model that comfortably fits your Mac."
 
-Invoke it as a subagent with the base model name as the argument.
+Invoke it as a subagent, passing along any base model name and constraints (context length, task) as the argument.
 
 ---
 
