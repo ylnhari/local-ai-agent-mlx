@@ -47,98 +47,79 @@ console = Console()
 #   https://huggingface.co/mlx-community
 # Standard HuggingFace models also work — mlx-lm converts them on first load.
 MODELS = [
-    # ── MLX Community (pre-converted, recommended) ──────────────────────────
+    # ── Small — great on 8–16 GB Macs ───────────────────────────────────────
     {
         "id":      "mlx-community/Llama-3.2-1B-Instruct-4bit",
         "name":    "Llama 3.2 1B",
         "size":    "~0.7 GB",
         "size_gb": 0.7,
-        "desc":    "Ultra-fast, works on 8 GB RAM",
+        "desc":    "Ultra-fast, runs on any 8 GB Mac",
     },
     {
         "id":      "mlx-community/Llama-3.2-3B-Instruct-4bit",
         "name":    "Llama 3.2 3B  ⭐",
         "size":    "~2 GB",
         "size_gb": 2.0,
-        "desc":    "Best starter — fast and capable",
+        "desc":    "Best lightweight starter — fast and capable",
         "recommended": True,
     },
     {
-        "id":      "mlx-community/Phi-3.5-mini-instruct-4bit",
-        "name":    "Phi 3.5 Mini",
-        "size":    "~2.2 GB",
-        "size_gb": 2.2,
-        "desc":    "Strong reasoning and coding for its size",
+        "id":      "mlx-community/Qwen3-4B-Instruct-2507-4bit",
+        "name":    "Qwen3 4B",
+        "size":    "~2.4 GB",
+        "size_gb": 2.4,
+        "desc":    "Strong small reasoning & coding, 256K context",
+    },
+    # ── Mid — sweet spot for 16–24 GB Macs ──────────────────────────────────
+    {
+        "id":      "mlx-community/gemma-4-12B-it-OptiQ-4bit",
+        "name":    "Gemma 4 12B",
+        "size":    "~7 GB",
+        "size_gb": 7.0,
+        "desc":    "Multimodal, calibrated OptiQ quant — 16 GB sweet spot",
     },
     {
-        "id":      "mlx-community/gemma-3-4b-it-4bit",
-        "name":    "Gemma 3 4B",
-        "size":    "~2.5 GB",
-        "size_gb": 2.5,
-        "desc":    "Google's compact instruction model",
+        "id":      "mlx-community/gemma-4-12B-it-8bit",
+        "name":    "Gemma 4 12B (8-bit)",
+        "size":    "~13 GB",
+        "size_gb": 13.0,
+        "desc":    "Higher-fidelity 8-bit weights — best on 24 GB+",
+    },
+    # ── Large — flagship quality for 32–48 GB Macs ──────────────────────────
+    {
+        "id":      "mlx-community/Qwen3.6-27B-OptiQ-4bit",
+        "name":    "Qwen3.6 27B",
+        "size":    "~18 GB",
+        "size_gb": 18.0,
+        "desc":    "Flagship dense reasoning/coding — needs 32 GB+",
     },
     {
-        "id":      "mlx-community/Mistral-7B-Instruct-v0.3-4bit",
-        "name":    "Mistral 7B",
-        "size":    "~4.1 GB",
-        "size_gb": 4.1,
-        "desc":    "Excellent general instruction following",
-    },
-    {
-        "id":      "mlx-community/Llama-3.1-8B-Instruct-4bit",
-        "name":    "Llama 3.1 8B",
-        "size":    "~4.5 GB",
-        "size_gb": 4.5,
-        "desc":    "High quality, highly versatile",
-    },
-    {
-        "id":      "mlx-community/Qwen2.5-7B-Instruct-4bit",
-        "name":    "Qwen 2.5 7B",
-        "size":    "~4.3 GB",
-        "size_gb": 4.3,
-        "desc":    "Great for coding and multilingual tasks",
-    },
-    {
-        "id":      "mlx-community/DeepSeek-R1-0528-Qwen3-8B-4bit",
-        "name":    "DeepSeek R1 8B",
-        "size":    "~5 GB",
-        "size_gb": 5.0,
-        "desc":    "Reasoning model with chain-of-thought",
-    },
-    {
-        "id":      "mlx-community/Llama-3.3-70B-Instruct-4bit",
-        "name":    "Llama 3.3 70B",
-        "size":    "~39 GB",
-        "size_gb": 39.0,
-        "desc":    "Flagship quality (needs 48 GB+ RAM)",
+        "id":      "mlx-community/Qwen3.6-35B-A3B-OptiQ-4bit",
+        "name":    "Qwen3.6 35B-A3B  ⭐",
+        "size":    "~25 GB",
+        "size_gb": 25.0,
+        "desc":    "MoE flagship (3B active = fast, 256K+ ctx) — best on 48 GB",
     },
     # ── Other popular sources (also MLX-compatible) ──────────────────────────
     {
-        "id":      "bartowski/Llama-3.2-3B-Instruct-GGUF",
-        "name":    "Llama 3.2 3B (bartowski)",
-        "size":    "~2 GB",
-        "size_gb": 2.0,
-        "desc":    "Popular community quantization",
+        "id":      "unsloth/gemma-4-26b-a4b-it-UD-MLX-4bit",
+        "name":    "Gemma 4 26B-A4B (Unsloth)",
+        "size":    "~16 GB",
+        "size_gb": 16.0,
+        "desc":    "Unsloth Dynamic UD-MLX MoE quant — needs 32 GB+",
     },
     {
-        "id":      "unsloth/Llama-3.2-3B-Instruct",
-        "name":    "Llama 3.2 3B (unsloth)",
-        "size":    "~2 GB",
-        "size_gb": 2.0,
-        "desc":    "Unsloth fine-tuned variant",
-    },
-    {
-        "id":      "microsoft/Phi-3.5-mini-instruct",
-        "name":    "Phi 3.5 Mini (official)",
-        "size":    "~7.6 GB",
-        "size_gb": 7.6,
+        "id":      "Qwen/Qwen3-4B-Instruct-2507",
+        "name":    "Qwen3 4B (official)",
+        "size":    "~8 GB",
+        "size_gb": 8.0,
         "desc":    "Original bf16 weights — mlx-lm converts on first load",
     },
     {
-        "id":      "google/gemma-3-4b-it",
-        "name":    "Gemma 3 4B (official)",
-        "size":    "~9.8 GB",
-        "size_gb": 9.8,
+        "id":      "google/gemma-4-12b-it",
+        "name":    "Gemma 4 12B (official)",
+        "size":    "~24 GB",
+        "size_gb": 24.0,
         "desc":    "Original bf16 weights — mlx-lm converts on first load",
     },
 ]
@@ -173,22 +154,22 @@ def _fit_indicator(ram_gb: int, size_gb: float) -> str:
 
 def show_hardware_panel(ram_gb: int, chip: str):
     if ram_gb <= 8:
-        sweet_spot  = "1B – 3B models"
-        warning     = "[red]Avoid anything larger than ~3 GB — it may crash or swap heavily.[/red]"
+        sweet_spot  = "Llama 3.2 3B / Qwen3 4B  (≤ ~3 GB models)"
+        warning     = "[red]Avoid anything larger than ~4 GB — it may crash or swap heavily.[/red]"
     elif ram_gb <= 16:
-        sweet_spot  = "3B – 8B models"
-        warning     = "7–8B models run well. Avoid 13B+."
+        sweet_spot  = "Gemma 4 12B (4-bit)  —  7B – 12B sweet spot"
+        warning     = "12B runs well. Avoid 24B+ at this RAM."
     elif ram_gb <= 24:
-        sweet_spot  = "7B – 13B models"
-        warning     = "8B models will be fast. 13B possible but slower."
+        sweet_spot  = "Gemma 4 12B (8-bit)  —  up to ~14B"
+        warning     = "12B is fast; 24–27B is possible but tight."
     elif ram_gb <= 36:
-        sweet_spot  = "8B – 13B models (30B possible)"
-        warning     = "30B models will run but expect reduced speed."
+        sweet_spot  = "Qwen3.6 27B (4-bit)  —  up to ~27B"
+        warning     = "27B dense runs well; 35B MoE will be tight."
     elif ram_gb <= 48:
-        sweet_spot  = "up to 34B models"
-        warning     = "70B will likely be too slow on this amount of RAM."
+        sweet_spot  = "Qwen3.6 35B-A3B (4-bit)  —  MoE flagship"
+        warning     = "Dense 70B will likely be too slow; the 35B MoE is ideal here."
     else:
-        sweet_spot  = "any model including 70B"
+        sweet_spot  = "any model — 35B-A3B at 8-bit, or a dense 70B"
         warning     = "You have enough RAM to run the full catalog comfortably."
 
     console.print(Panel(
