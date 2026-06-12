@@ -252,15 +252,21 @@ uv run monitor.py
 
 Shows a live dashboard (refreshes every second):
 
-| Row | What it shows |
-|---|---|
-| CPU | Overall system CPU across all cores |
-| GPU Metal | Apple GPU utilization via IOKit (no `sudo` needed) |
-| RAM | Total unified memory used / available |
-| Memory pressure | `normal` / `warning` / `critical` via `memory_pressure` |
-| LLM RAM | RAM used by the `mlx_lm server` process specifically |
-| LLM CPU | CPU used by the `mlx_lm server` process specifically |
-| Server :8080 | Live ping — `● online` once the server is accepting requests |
+| Row | What it shows | How it's calculated |
+|---|---|---|
+| CPU | Overall system CPU across all cores | `psutil.cpu_percent()` |
+| GPU Metal | Apple GPU utilization (no `sudo` needed) | `ioreg` "Device Utilization %" |
+| RAM | Total unified memory used / available — the headline number | `psutil.virtual_memory()` used / total |
+| Wired RAM | Memory locked in RAM (non-pageable; includes GPU/Metal), as reported by macOS | `psutil.virtual_memory().wired` |
+| Memory pressure | `normal` / `warning` / `critical` | parses macOS `memory_pressure` |
+| Server proc RAM | Memory used by the `mlx_lm server` process tree, as reported by macOS | sum of each process's RSS (Resident Set Size) over the process + children |
+| Server proc CPU | CPU used by the server process tree | sum of `cpu_percent()` over the process + children |
+| Server :8080 | `● ready` / `◐ loading…` / `○ offline` | TCP check + HTTP `GET /health` |
+
+> **Unified memory.** Apple Silicon shares **one** memory pool between CPU and GPU. **RAM** is the whole machine; **Wired RAM** is the locked (non-pageable) portion of it. **Server proc RAM** is the memory macOS reports for the server process. For judging total memory use, read **RAM** and **Wired RAM** (system-wide); treat **Server proc RAM** as a per-process figure reported by macOS.
+
+> **Server status:** `◐ loading…` means the port is open but `/health` isn't responding yet (still starting/loading); `● ready` means the HTTP server is answering. The check uses the cheap `/health` endpoint (not `/v1/models`, which rescans the Hugging Face cache on every call).
+
 
 For deeper Apple Neural Engine (ANE) and per-core (E/P cluster) breakdown:
 
@@ -268,6 +274,84 @@ For deeper Apple Neural Engine (ANE) and per-core (E/P cluster) breakdown:
 brew install asitop
 sudo asitop
 ```
+
+---
+
+## Testing effective context length (`context_test.py`)
+
+Every model advertises a maximum context window (e.g. 128K or 256K tokens), but the **usable** window is almost always smaller — limited by your RAM, the server's KV-cache budget, and the model's real ability to *recall* information buried in a long prompt. `context_test.py` measures both so you can pick a safe working size.
+
+### What it does
+
+It runs a **"needle-in-a-haystack"** sweep. For each target prompt size it:
+
+1. Generates a random 8-character passcode (the *needle*).
+2. Inserts it at **five depths** in the prompt — `start`, `25%`, `50%`, `75%`, `end` — padded with varied filler text up to the target size (the *haystack*).
+3. Asks the model to recall the exact passcode.
+4. Records the **actual token count** the server saw, whether each depth was recalled correctly, and how long it took.
+
+This finds **two different limits**:
+
+| Limit | Meaning |
+|---|---|
+| **Hard limit** | First size where the server returns an error (out of memory / KV cache exceeded). |
+| **Effective limit** | First size where recall flips from ✓ to ✗ — the model "loses" the needle even though the request succeeds (the *lost-in-the-middle* effect). |
+
+### How to run
+
+Start your server first (`uv run start.py`), then in a second terminal:
+
+```bash
+# Test the first model the server reports, with the default size sweep
+uv run context_test.py
+
+# Pick a specific model (servers can host several)
+uv run context_test.py --model mlx-community/Qwen3.6-35B-A3B-OptiQ-4bit
+
+# Custom sizes and port
+uv run context_test.py --port 8080 --sizes 2000,8000,32000,64000,131072
+```
+
+| Flag | Default | Purpose |
+|---|---|---|
+| `--model` | first model from `/v1/models` | Which loaded model to test |
+| `--sizes` | `1000…131072` | Comma-separated approximate prompt sizes (tokens) |
+| `--port` / `--host` | `8080` / `localhost` | Where the server is listening |
+| `--timeout` | `600` | Per-request timeout in seconds (large prompts are slow) |
+
+### How to read the results
+
+```
+   real_tok   start    25%    50%    75%    end    secs
+  ------------------------------------------------------
+      2,626       ✓      ✓      ✓      ✓      ✓     30.9
+     10,326       ✓      ✓      ✓      ✓      ✓     81.2
+     40,999       ✓      ✓      ✓      ✗      ✗    392.5
+```
+
+- **`real_tok`** — the *actual* prompt token count the server reported (not the approximate target).
+- **✓ / ✗** — whether the needle was recalled correctly at that depth. ✗ at deeper positions while ✓ at the start is the classic *lost-in-the-middle* pattern.
+- **`secs`** — total time for all five depth probes at that size. This climbs fast — long prompts are usually **latency-bound, not memory-bound**.
+- **`ERR`** — the server rejected the request (hard limit). The test stops and prints the error.
+
+The final **REPORT** summarizes:
+
+- **Reliable at ALL depths up to** — largest size where every depth passed.
+- **First degradation** — where recall started failing, and which depths.
+- **Hard server/RAM limit** — where the server errored, if reached.
+- **RECOMMENDED CONTEXT SIZE** — ~80 % of the largest all-pass size (rounded to a clean power of two), plus a ready-to-use `--max-kv-size` launch example.
+
+### What to do with the results
+
+1. **Cap the KV cache** to a safe size when launching the server, e.g.:
+   ```bash
+   python -m mlx_lm server --model <model> --max-kv-size 32768
+   ```
+   This bounds memory use and avoids slow, unreliable giant prompts.
+2. **Keep working prompts well under the effective limit** — always leave room for the model's reply; don't fill the entire window.
+3. **For interactive use, stay small** (≈ ≤ 16K tokens). Recall may hold far higher, but per-request latency grows steeply.
+
+> **Thinking-model caveat:** "reasoning" models (e.g. Qwen3.6) spend hidden tokens thinking before answering. If `max_tokens` is too small the visible answer can be truncated and show a false ✗. The tester already accounts for this (uses `max_tokens=256` and falls back to `reasoning_content` / `text`), but keep it in mind if results look noisy at one depth.
 
 ---
 
