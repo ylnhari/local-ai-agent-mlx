@@ -200,33 +200,45 @@ curl http://localhost:8080/v1/chat/completions \
 | **MLX-format** (pre-converted, e.g. `mlx-community/*`) | Downloaded and run directly | Fast |
 | **Standard HF weights** (e.g. `mistralai/*`, `google/*`, `meta-llama/*`) | `mlx-lm` converts them on first load | Slower first run |
 
-For best startup performance, prefer pre-converted MLX models from [mlx-community](https://huggingface.co/mlx-community) or [bartowski](https://huggingface.co/bartowski).
+For best startup performance, prefer pre-converted MLX models from [mlx-community](https://huggingface.co/mlx-community) or [lmstudio-community](https://huggingface.co/lmstudio-community). Note that `mlx-lm` does **not** load GGUF files — use MLX weights or original safetensors checkpoints instead.
 
 ### Curated list (shown in the interactive menu)
+
+The menu auto-detects your RAM and flags each model **[green]✓ fits[/green] / [yellow]~ tight[/yellow] / [red]✗ too large[/red]**. Quick pick by your Mac's unified memory:
+
+| Your Mac (unified RAM) | Recommended model | On-disk | Why |
+|---|---|---|---|
+| **8 GB** | Llama 3.2 3B ⭐ | ~2 GB | Fast, capable lightweight starter |
+| **16 GB** | Gemma 4 12B (OptiQ 4-bit) | ~7 GB | Multimodal, near-flagship quality |
+| **24 GB** | Gemma 4 12B (8-bit) | ~13 GB | Higher-fidelity 8-bit weights |
+| **32 GB** | Qwen3.6 27B (OptiQ 4-bit) | ~18 GB | Flagship dense reasoning & coding |
+| **48 GB** | Qwen3.6 35B-A3B (OptiQ 4-bit) ⭐ | ~25 GB | MoE flagship: 3B active = fast, 256K+ context |
+| **64 GB+** | Qwen3.6 35B-A3B (8-bit) | ~37 GB | Maximum-fidelity flagship |
 
 #### MLX Community — pre-converted, recommended
 
 | Model | Size | Notes |
 |---|---|---|
-| Llama 3.2 1B | ~0.7 GB | Ultra-fast, works on 8 GB RAM |
-| **Llama 3.2 3B ⭐** | ~2 GB | **Best starter — recommended** |
-| Phi 3.5 Mini | ~2.2 GB | Strong reasoning and coding |
-| Gemma 3 4B | ~2.5 GB | Google's compact instruction model |
-| Mistral 7B | ~4.1 GB | Excellent instruction following |
-| Llama 3.1 8B | ~4.5 GB | High quality, highly versatile |
-| Qwen 2.5 7B | ~4.3 GB | Coding and multilingual |
-| DeepSeek R1 8B | ~5 GB | Chain-of-thought reasoning |
-| Llama 3.3 70B | ~39 GB | Best quality (needs 48 GB+ RAM) |
+| Llama 3.2 1B | ~0.7 GB | Ultra-fast, runs on any 8 GB Mac |
+| **Llama 3.2 3B ⭐** | ~2 GB | **Best lightweight starter** |
+| Qwen3 4B | ~2.4 GB | Strong small reasoning & coding, 256K context |
+| Gemma 4 12B (OptiQ 4-bit) | ~7 GB | Multimodal — 16 GB sweet spot |
+| Gemma 4 12B (8-bit) | ~13 GB | Higher-fidelity 8-bit |
+| Qwen3.6 27B (OptiQ 4-bit) | ~18 GB | Flagship dense (needs 32 GB+) |
+| Qwen3.6 35B-A3B (OptiQ 4-bit) | ~25 GB | MoE flagship (best on 48 GB) |
+
+> **OptiQ** — calibrated mixed-precision quant (sensitive layers kept at higher precision); noticeably better quality than uniform 4-bit at a similar size.
+> **A3B** — Mixture-of-Experts with ~3B active parameters per token, so it runs at small-model speed while keeping large-model quality and a small KV cache (great for long context).
 
 #### Other sources — also fully supported
 
+`mlx-lm` runs any MLX-format repo, plus standard Hugging Face safetensors weights (converted on first load). It does **not** load GGUF files.
+
 | Model ID | Notes |
 |---|---|
-| `bartowski/Llama-3.2-3B-Instruct-GGUF` | Popular community quantization |
-| `unsloth/Llama-3.2-3B-Instruct` | Unsloth fine-tuned variant |
-| `microsoft/Phi-3.5-mini-instruct` | Official bf16 weights — converted on first load |
-| `google/gemma-3-4b-it` | Official bf16 weights — converted on first load |
-| `mistralai/Mistral-7B-Instruct-v0.3` | Any standard HF checkpoint |
+| `unsloth/gemma-4-26b-a4b-it-UD-MLX-4bit` | Unsloth Dynamic (UD-MLX) MoE quant — pre-converted, no conversion needed |
+| `Qwen/Qwen3-4B-Instruct-2507` | Official Qwen weights — mlx-lm converts on first load |
+| `google/gemma-4-12b-it` | Official Google weights — mlx-lm converts on first load |
 
 Use the **"Enter any Hugging Face model ID"** option in the menu to run models not in the list.
 
@@ -333,3 +345,4 @@ Requires macOS 15 or later for best performance.
 - [WWDC 2026 — Run local agentic AI on the Mac using MLX](https://developer.apple.com/videos/play/wwdc2026/232/)
 - [MLX Community on Hugging Face](https://huggingface.co/mlx-community) — Model library
 - [MLX Framework](https://ml-explore.github.io/mlx/) — Apple's ML framework for Apple Silicon
+ 
